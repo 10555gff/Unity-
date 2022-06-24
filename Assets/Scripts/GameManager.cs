@@ -24,6 +24,8 @@ public class GameManager : MonoBehaviour
     char var_ch;
     //魔方位置是否正确
     bool isP;
+    //魔方转动是否完毕
+    public bool isFinish=true;
     //存魔方阶段
     List<string> mofanStageList = new List<string>();
     //接收协程的返回值
@@ -129,45 +131,6 @@ public class GameManager : MonoBehaviour
                         case 17:
                         case 20:
                         case 23:
-                        case 26:
-                            cubeViewPrefabList[i].GetComponentInChildren<Renderer>().material = myMaterialList[1];
-                            break;
-                    }
-                }
-                break;
-            case "白色底部":
-                for (int i = 0; i < cubeViewPrefabList.Length; i++)
-                {
-                    switch (i)
-                    {
-                        case 0:
-                        case 3:
-                        case 4:
-                        case 6:
-                        case 9:
-                        case 10:
-                        case 12:
-                        case 14:
-                        case 15:
-                        case 16:
-                        case 18:
-                        case 21:
-                        case 22:
-                        case 24:
-                            cubeViewPrefabList[i].GetComponentInChildren<Renderer>().material = myMaterialList[0];
-                            break;
-                        case 1:
-                        case 2:
-                        case 5:
-                        case 7:
-                        case 8:
-                        case 11:
-                        case 13:
-                        case 17:
-                        case 19:
-                        case 20:
-                        case 23:
-                        case 25:
                         case 26:
                             cubeViewPrefabList[i].GetComponentInChildren<Renderer>().material = myMaterialList[1];
                             break;
@@ -354,7 +317,7 @@ public class GameManager : MonoBehaviour
             strReuslt = "魔方已复原";
         }
         //魔方底两层复原和顶层翻色
-        else if (mofanStageList.Count >= 12 && mofanStageList.Count < 20)
+        else if (mofanStageList.Count >= 12)
         {
             if (mofanContains("M2:M8:M20:M26:M1:M4:M7:M10:M16:M19:M22:M25"))
             {
@@ -399,39 +362,8 @@ public class GameManager : MonoBehaviour
                     strReuslt = strReuslt + "," + "绿色顶层";
             }
         }
-        //魔方底部复原
-        else if (mofanStageList.Count >= 8 && mofanStageList.Count < 12)
-        {
-            if (mofanContains("M1:M4:M7:M10:M16:M19:M22:M25"))
-            {
-                strReuslt = "白色底部";
-            }
-            else if (mofanContains("M3:M6:M9:M12:M18:M21:M24:M27"))
-            {
-                strReuslt = "黄色底部";
-            }
-
-            else if (mofanContains("M19:M20:M21:M22:M24:M25:M26:M27"))
-            {
-                strReuslt = "橙色底部";
-            }
-            else if (mofanContains("M1:M2:M3:M4:M6:M7:M8:M9"))
-            {
-                strReuslt = "红色底部";
-            }
-
-            else if (mofanContains("M1:M2:M3:M10:M12:M19:M20:M21"))
-            {
-                strReuslt = "绿色底部";
-            }
-            else if (mofanContains("M7:M8:M9:M16:M18:M25:M26:M27"))
-            {
-                strReuslt = "蓝色底部";
-            }
-
-        }
         //魔方底层十字架复原
-        else if (mofanStageList.Count >= 4 && mofanStageList.Count < 8)
+        else if (mofanStageList.Count >= 4)
         {
             if (mofanContains("M4:M10:M16:M22"))
             {
@@ -460,7 +392,7 @@ public class GameManager : MonoBehaviour
                 strReuslt = "蓝色十字架";
             }
         }
-        else if (mofanStageList.Count < 4)
+        else if (mofanStageList.Count < 3)
         {
             if (mofanHCheck("M4:M10:M16:M22"))
                 strReuslt = "白色小黄花";
@@ -580,8 +512,8 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < strarry.Length; i++)
         {
             InStrMofan(strarry[i]);
-            //等待0.2秒
-            yield return new WaitForSeconds(0.22f);
+            //等待0.23秒
+            yield return new WaitForSeconds(0.23f);
         }
         yield return null;
     }
@@ -599,31 +531,31 @@ public class GameManager : MonoBehaviour
             switch (var_ch)
             {
                 case 'x':
-                    mofanBtnOnclick("x", Axis.O);
+                    mofanBtnOnclick("x", Axis.O,false);
                     break;
                 case 'y':
-                    mofanBtnOnclick("y", Axis.O);
+                    mofanBtnOnclick("y", Axis.O,false);
                     break;
                 case 'z':
-                    mofanBtnOnclick("z", Axis.O);
+                    mofanBtnOnclick("z", Axis.O,false);
                     break;
                 case 'f':
-                    mofanBtnOnclick("f", Axis.Z);
+                    mofanBtnOnclick("f", Axis.Z,false);
                     break;
                 case 'b':
-                    mofanBtnOnclick("b", Axis.Z);
+                    mofanBtnOnclick("b", Axis.Z,false);
                     break;
                 case 'r':
-                    mofanBtnOnclick("r", Axis.X);
+                    mofanBtnOnclick("r", Axis.X,false);
                     break;
                 case 'l':
-                    mofanBtnOnclick("l", Axis.X);
+                    mofanBtnOnclick("l", Axis.X,false);
                     break;
                 case 'u':
-                    mofanBtnOnclick("u", Axis.Y);
+                    mofanBtnOnclick("u", Axis.Y,false);
                     break;
                 case 'd':
-                    mofanBtnOnclick("d", Axis.Y);
+                    mofanBtnOnclick("d", Axis.Y,false);
                     break;
             }
         }
@@ -632,39 +564,44 @@ public class GameManager : MonoBehaviour
             switch (var_ch)
             {
                 case 'E':
-                    mofanBtnOnclick("E", Axis.Y);
+                    mofanBtnOnclick("E", Axis.Y,false);
                     break;
                 case 'M':
-                    mofanBtnOnclick("M", Axis.X);
+                    mofanBtnOnclick("M", Axis.X,false);
                     break;
                 case 'S':
-                    mofanBtnOnclick("S", Axis.Z);
+                    mofanBtnOnclick("S", Axis.Z,false);
                     break;
                 case 'F':
-                    mofanBtnOnclick("F", Axis.Z);
+                    mofanBtnOnclick("F", Axis.Z,false);
                     break;
                 case 'B':
-                    mofanBtnOnclick("B", Axis.Z);
+                    mofanBtnOnclick("B", Axis.Z,false);
                     break;
                 case 'R':
-                    mofanBtnOnclick("R", Axis.X);
+                    mofanBtnOnclick("R", Axis.X,false);
                     break;
                 case 'L':
-                    mofanBtnOnclick("L", Axis.X);
+                    mofanBtnOnclick("L", Axis.X,false);
                     break;
                 case 'U':
-                    mofanBtnOnclick("U", Axis.Y);
+                    mofanBtnOnclick("U", Axis.Y,false);
                     break;
                 case 'D':
-                    mofanBtnOnclick("D", Axis.Y);
+                    mofanBtnOnclick("D", Axis.Y,false);
                     break;
             }
         }
         //恢复默认转动为顺时针
         UIinit.btn_type = 1;
     }
-    //魔方转动调用方法
-    public void mofanBtnOnclick(string mofantype,Axis axis)
+    /// <summary>
+    /// 魔方转动调用方法
+    /// </summary>
+    /// <param name="mofantype">控制器类型</param>
+    /// <param name="axis">转动的轴</param>
+    /// <param name="istip">是否开启魔方提示</param>
+    public void mofanBtnOnclick(string mofantype,Axis axis,bool istip)
     {
         //看传入的mofantype是否相同，相同则不重复生成控制器
         if (pre_mofantype != mofantype)
@@ -695,11 +632,12 @@ public class GameManager : MonoBehaviour
                 mofanRotation(mofantype, axis, -90);
                 break;
         }
-        StartCoroutine(RotateOverTime(mofanControlList[mofanConNum].transform, Quaternion.Euler(mofan_rotate * n1), 0.22f));
+        StartCoroutine(RotateOverTime(mofanControlList[mofanConNum].transform, Quaternion.Euler(mofan_rotate * n1), 0.23f,istip));
     }
     //规定时间内转动固定角度
-    IEnumerator RotateOverTime(Transform transformToRotate, Quaternion targetRotation, float duration)
+    IEnumerator RotateOverTime(Transform transformToRotate, Quaternion targetRotation, float duration,bool istip)
     {
+        isFinish = false;
         float timePassed = 0f;
         float factor;
         while (timePassed < duration)
@@ -712,6 +650,10 @@ public class GameManager : MonoBehaviour
         }
         // 要确保以精确值结束，请在完成时设置目标旋转修复
         transformToRotate.rotation = targetRotation;
+        isFinish = true;
+        ////开启魔方提示
+        //if (istip)
+        //    MofanMixCube.Instance.CheckFan();
         yield return null;
     }
     //魔方旋转角度调用
@@ -914,6 +856,15 @@ public class GameManager : MonoBehaviour
                         break;
                 }
                 break;
+        }
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            //退出游戏
+            Application.Quit();
         }
     }
 }

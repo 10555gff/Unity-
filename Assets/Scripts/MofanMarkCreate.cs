@@ -97,7 +97,7 @@ public class MofanMarkCreate : MonoBehaviour
             obj.transform.localEulerAngles = new Vector3(0, 0, 180);
             text = obj.GetComponentInChildren<Text>();
             text.text = mark_name[6];
-            text.fontSize = 80;
+            text.fontSize = 85;
         }
     }
     
