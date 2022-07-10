@@ -354,7 +354,7 @@ public class MofanMixCube : MonoBehaviour
         PLLsprs = Resources.LoadAll<Sprite>("PLL");
         OLLsprs = Resources.LoadAll<Sprite>("OLL");
         F2Lsprs = Resources.LoadAll<Sprite>("F2L");
-        //empty = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+        empty = Resources.Load<Sprite>("Image");
         //找到小地图摄像机
         miCamera = GameObject.Find("Mini Camera").gameObject;
         //找到按钮界面
