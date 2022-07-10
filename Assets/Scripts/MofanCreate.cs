@@ -6,7 +6,7 @@ public class MofanCreate : MonoBehaviour
 {
     public GameObject CubePrefab;
     GameObject obj;
-    int a, b,count;
+    int count=0;
     string[] cube_control = { "F_Control", "B_Control", "R_Control", "L_Control", "U_Control", "D_Control" ,
                               "E_Control", "M_Control", "S_Control", "x_Control", "y_Control", "z_Control" };
     Vector3[] cube_position = { new Vector3(0, 0, -1), new Vector3(0, 0, 1), 

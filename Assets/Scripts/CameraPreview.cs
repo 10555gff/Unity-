@@ -80,5 +80,4 @@ public class CameraPreview : MonoBehaviour
         transform.rotation = rotation;
         transform.position = position;
     }
-
 }

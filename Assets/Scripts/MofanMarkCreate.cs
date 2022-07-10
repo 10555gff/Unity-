@@ -42,24 +42,26 @@ public class MofanMarkCreate : MonoBehaviour
             //在这里监听按钮的双击事件
             switch (go.name)
             {
+                case "F":
+                    MofanMixCube.Instance.CheckFan();
+                    break;
                 case "B":
-                    GameManager.Instance.InStrMofan("y");
-                    GameManager.Instance.InStrMofan("y");
+                    GameManager.Instance.stopCor = StartCoroutine(GameManager.Instance.InMStrMfan("y y", true));
                     break;
                 case "R":
-                    GameManager.Instance.InStrMofan("y");
+                    GameManager.Instance.InStrMofan("y", true);
                     break;
                 case "L":
-                    GameManager.Instance.InStrMofan("y'");
+                    GameManager.Instance.InStrMofan("y'", true);
                     break;
                 case "U":
-                    GameManager.Instance.InStrMofan("x'");
+                    GameManager.Instance.InStrMofan("x'", true);
                     break;
                 case "D":
-                    GameManager.Instance.InStrMofan("x");
+                    GameManager.Instance.InStrMofan("x", true);
                     break;
             }
-            GameObject.Find("Main Camera").GetComponent<CameraPreview>().InFAngles();
+            GameObject.Find("Main Camera").SendMessage("InFAngles");
         }
         //记录下当前的时间
         lastTime = Time.realtimeSinceStartup;
@@ -97,7 +99,7 @@ public class MofanMarkCreate : MonoBehaviour
             obj.transform.localEulerAngles = new Vector3(0, 0, 180);
             text = obj.GetComponentInChildren<Text>();
             text.text = mark_name[6];
-            text.fontSize = 80;
+            text.fontSize = 90;
         }
     }
     
