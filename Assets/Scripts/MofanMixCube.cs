@@ -475,7 +475,7 @@ public class MofanMixCube : MonoBehaviour
                 break;
             case "白色十字架"://白色十字架已完成
                 GameManager.Instance.setMofanView("白色底两层");
-                UIinit.Instance.ChangeValue("OLL", f2lColour[reChoose]);
+                UIinit.Instance.ChangeValue("F2L", f2lColour[reChoose]);
                 F2LRestore(readF2LArr(reChoose));
                 break;
             case "白色底两层"://白色底两层已完成
