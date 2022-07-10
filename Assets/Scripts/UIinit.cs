@@ -81,16 +81,16 @@ public class UIinit : MonoBehaviour
             switch (t1.Substring(t1.Length - 1, 1))
             {
                 case "x":
-                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.X,true);
+                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.X,false);
                     break;
                 case "y":
-                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.Y,true);
+                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.Y,false);
                     break;
                 case "z":
-                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.Z,true);
+                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.Z,false);
                     break;
                 case "o":
-                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.O,true);
+                    GameManager.Instance.mofanBtnOnclick(t1.Substring(0, 1), GameManager.Axis.O,false);
                     break;
             }
         }
@@ -133,8 +133,6 @@ public class UIinit : MonoBehaviour
     }
 
 
-
-
     public void ChangeValue(string s1,string s2,string s3, Sprite sp)
     {
         txt_restore.text = s1;
@@ -151,9 +149,5 @@ public class UIinit : MonoBehaviour
     {
         txt_tip.text = s3;
         mo_image.sprite = sp;
-    }
-    public void ChangeValue(string s3)
-    {
-        txt_tip.text = s3;
     }
 }
