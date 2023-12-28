@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEditor;
+using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,10 +19,8 @@ public class MofanMixCube : MonoBehaviour
 {
     public static MofanMixCube Instance = null;
     GameObject btnCanvas,miCamera;
-    Button[] buttons;
+    public Button[] buttons;
     public static bool setClick = true;
-    //按钮名字
-    string[] btnName = { "mstateMix", "mstateSave", "mstateRecovery" , "MofanCheck", "MofanRestore" };
     //打乱魔方字符定义
     string[] mxi_strs = { "F","B","R","L","U","D","E","M","S",
                           "f","b","r","l","u","d"};
@@ -359,16 +358,15 @@ public class MofanMixCube : MonoBehaviour
         miCamera = GameObject.Find("Mini Camera").gameObject;
         //找到按钮界面
         btnCanvas = GameObject.Find("BtnCanvas").gameObject;
-        buttons = new Button[btnName.Length];
         //按钮绑定
-        for (int i = 0; i < btnName.Length; i++)
+        for (int i = 0; i < buttons.Length; i++)
         {
-            buttons[i] = transform.Find(btnName[i]).GetComponent<Button>();
             EventTriggerListener.Get(buttons[i].gameObject).onClick = OnButtonClick;
         }
     }
     private void OnButtonClick(GameObject go)
     {
+        Debug.Log(go.name);
         //在这里监听按钮的点击事件
         switch (go.name)
         {
@@ -384,10 +382,7 @@ public class MofanMixCube : MonoBehaviour
                 if (setClick)
                     ReseMofanSta();
                 break;
-            case "MofanRestore"://魔方底十字复原
-                if (setClick && GameManager.Instance.RestoreCheck()=="")
-                    StartCoroutine("mofanDRestore");
-                break;
+
             case "MofanCheck"://魔方公式提示
                 if (setClick)
                 {
@@ -395,6 +390,20 @@ public class MofanMixCube : MonoBehaviour
                     CheckFan();
                 }
                 break;
+            case "MofanRestone"://魔方一键复原
+                if (setClick && GameManager.Instance.RestoreCheck() == "")
+                    StartCoroutine(RestoreMofan());
+                Debug.Log("AAAAAAAAAAAAA");
+                break;
+            case "MofanJiduan"://魔方阶段复原
+                if (setClick && GameManager.Instance.RestoreCheck() == "")
+                    Debug.Log("BBBBBBBBBBBBBBBB");
+                break;
+            case "MofanRestB"://魔方底十字复原
+                if (setClick && GameManager.Instance.RestoreCheck() == "")
+                    StartCoroutine("mofanDRestore");
+                break;
+
         }
     }
     //打乱魔方
@@ -419,6 +428,88 @@ public class MofanMixCube : MonoBehaviour
         CheckFan();
         yield return null;
     }
+
+    //魔方一键还原
+    IEnumerator RestoreMofan()
+    {
+        if (GameManager.Instance.RestoreCheck() != "魔方已复原")
+        {
+            setClick = false;
+            btnCanvas.SetActive(false);
+            int reNum = 0;
+            while (GameManager.Instance.RestoreCheck() != "魔方已复原" && reNum < 5)
+            {
+                yield return StartCoroutine(autoMofanRestore());
+                reNum++;
+            }
+            btnCanvas.SetActive(true);
+            setClick = true;
+        }
+        //协程结束
+        StopCoroutine(RestoreMofan());
+        yield return null;
+    }
+    //魔方自动复原一个阶段
+    IEnumerator autoMofanRestore()
+    {
+        //返回还原公式
+        string Restr = "a";
+        switch (GameManager.Instance.RestoreCheck())
+        {
+            case ""://魔方初始混乱状态
+                yield return mofanDRestore();
+                break;
+            case "白色小黄花"://白色小黄花已完成
+                GameManager.Instance.setMofanView("白色十字架");
+                yield return StartCoroutine(reWhite());
+                break;
+            case "白色十字架"://白色十字架已完成
+                GameManager.Instance.setMofanView("白色底两层");
+                for (int i = 0; i < 4; i++)
+                {
+                    //非标F2L转成标准F2L
+                    yield return turnF2LRange(readF2LArr()[i], i);
+                    Restr = F2LRestore(readF2LArr()[i]);
+                    if (Restr != "不属于F2L公式范围" && Restr != "F2L未找到")
+                    {
+                        Debug.Log(Restr + ":" + i % 4);
+                        //刷F2L公式
+                        yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr, true));
+                    }
+                }
+                break;
+            case "白色底两层"://白色底两层已完成
+                GameManager.Instance.setMofanView("白色底两层,黄色顶层");
+                Debug.Log(POLLRestore(true));
+                //OLL还原
+                yield return StartCoroutine(GameManager.Instance.InMStrMfan(POLLRestore(true), true));
+                break;
+            case "白色底两层,黄色顶层"://白色底两层和黄色顶层翻色已完成
+                GameManager.Instance.setMofanView("魔方已复原");
+                Debug.Log(POLLRestore(false));
+                //PLL还原
+                yield return StartCoroutine(GameManager.Instance.InMStrMfan(POLLRestore(false),true));
+                break;
+        }
+        //最后黄色层调整
+        Restr = LastUP();
+        if (GameManager.Instance.RestoreCheck() == "白色底两层,黄色顶层,U未对" && Restr != "")
+            yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr,true));
+
+        Debug.Log(GameManager.Instance.RestoreCheck());
+        yield return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
     //魔方底十字复原
     IEnumerator mofanDRestore()
     {
@@ -976,6 +1067,113 @@ public class MofanMixCube : MonoBehaviour
                 break;
         }
         str = string.Join(":", arrs);
+    }
+
+
+
+    //全部非标F2L转成标准F2L
+    IEnumerator turnF2LRange(string str, int n)
+    {
+        int numType = F2LRange(str);
+        switch (numType)
+        {
+            case -1:
+                Debug.Log("F2L范围判定错误");
+                break;
+            //1/2合
+            case 4:
+                yield return StartCoroutine(UnF2L(str));
+                break;
+            //1/2分
+            case 5:
+                yield return StartCoroutine(UnF2L(str));
+                yield return StartCoroutine(UnF2L(true, str, n));
+                break;
+            case 6://角块,1/3分
+                yield return StartCoroutine(UnF2L(true, str, n));
+                break;
+            case 7://棱块，2/3分
+                yield return StartCoroutine(UnF2L(false, str, n));
+                break;
+        }
+        //Debug.Log(numType+":"+str);
+
+        yield return null;
+    }
+    //将3/3的的非标转成标准F2L，无U判断
+    IEnumerator UnF2L(string str)
+    {
+        string s = str.Substring(4, 3).Replace("D", "");
+        int k = isCenterU(s);
+        if (k != -1)
+        {
+            yield return StartCoroutine(GameManager.Instance.InMStrMfan(s[k] + " U " + s[k] + "'", true));
+        }
+        else
+        {
+            Debug.Log("不在中间层");
+        }
+        yield return null;
+    }
+    //将1/3或2/3的非标转成标准F2L，有U判断
+    IEnumerator UnF2L(bool isjiao, string str, int n)
+    {
+        string s = "";
+        if (isjiao)
+        {
+            //角块
+            s = str.Substring(8);
+        }
+        else
+        {
+            //棱块s
+            s = str.Substring(4, 3).Replace("D", "");
+        }
+
+
+        int k = isCenterU(s);
+
+        if (k != -1)
+        {
+            yield return StartCoroutine(GameManager.Instance.InMStrMfan(s[k] + "", true));
+        }
+        else
+        {
+            Debug.Log("不在中间层");
+        }
+
+        string s1 = readF2LArr()[n].Substring(4);
+        reStr(ref s1);
+
+        if (!s1.Contains(s[k] + ""))
+        {
+            s1 = "U";
+        }
+        else
+        {
+            s1 = "U'";
+        }
+        yield return StartCoroutine(GameManager.Instance.InMStrMfan(s1 + " " + s[k] + "'", true));
+
+        yield return null;
+    }
+
+
+
+    /// <summary>
+    /// 读取F2L的块
+    /// </summary>
+    /// <returns>红绿;绿橙;橙蓝;蓝红</returns>
+    string[] readF2LArr()
+    {
+        string[] F2LArr = { "M5:M11:M1:M2", "M11:M23:M19:M20", "M23:M17:M25:M26", "M17:M5:M7:M8" };
+        string[] reStr = new string[F2LArr.Length];
+
+        for (int i = 0; i < F2LArr.Length; i++)
+        {
+            reStr[i] = MofanRestore.Instance.readMofanFixed(F2LArr[i], false);
+        }
+        return reStr;
     }
     /// <summary>
     /// 读取F2L的块
