@@ -391,6 +391,7 @@ public class GameManager : MonoBehaviour
     //魔方单公式输入
     public void InStrMofan(string t1,bool isbool)
     {
+        if (t1 == string.Empty) return;
         //顺、逆时针旋转
         if(t1.Substring(t1.Length - 1, 1)=="'")
         {

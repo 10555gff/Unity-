@@ -8,6 +8,7 @@ public class UIinit : MonoBehaviour
 {
     public static UIinit Instance = null;
     public Transform Canvas_ui;
+    public Transform Canvas_ui2;
     Button[] btns;
     Button btnUp;
     Button btnDown;

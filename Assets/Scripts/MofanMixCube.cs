@@ -1,6 +1,4 @@
 using System.Collections;
-using UnityEditor;
-using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,6 +24,8 @@ public class MofanMixCube : MonoBehaviour
                           "f","b","r","l","u","d"};
     //F2L颜色注释
     string[] f2lColour = { "红绿", "绿橙", "橙蓝" , "蓝红" };
+    //非F2l转F2l公式
+    string Unf2lto = "";
     //还原块类型选择
     int reChoose = 0;
 
@@ -366,7 +366,6 @@ public class MofanMixCube : MonoBehaviour
     }
     private void OnButtonClick(GameObject go)
     {
-        Debug.Log(go.name);
         //在这里监听按钮的点击事件
         switch (go.name)
         {
@@ -393,11 +392,10 @@ public class MofanMixCube : MonoBehaviour
             case "MofanRestone"://魔方一键复原
                 if (setClick && GameManager.Instance.RestoreCheck() == "")
                     StartCoroutine(RestoreMofan());
-                Debug.Log("AAAAAAAAAAAAA");
                 break;
             case "MofanJiduan"://魔方阶段复原
-                if (setClick && GameManager.Instance.RestoreCheck() == "")
-                    Debug.Log("BBBBBBBBBBBBBBBB");
+                if (setClick)
+                    StartCoroutine(RestoreCube());
                 break;
             case "MofanRestB"://魔方底十字复原
                 if (setClick && GameManager.Instance.RestoreCheck() == "")
@@ -449,65 +447,66 @@ public class MofanMixCube : MonoBehaviour
         StopCoroutine(RestoreMofan());
         yield return null;
     }
+    //魔方阶段还原一阶段
+    IEnumerator RestoreCube()
+    {
+        if (GameManager.Instance.RestoreCheck() != "魔方已复原")
+        {
+            setClick = false;
+            btnCanvas.SetActive(false);
+            yield return StartCoroutine(autoMofanRestore());
+            btnCanvas.SetActive(true);
+            setClick = true;
+        }
+        //协程结束
+        StopCoroutine(RestoreCube());
+        yield return null;
+    }
+
+
     //魔方自动复原一个阶段
     IEnumerator autoMofanRestore()
     {
         //返回还原公式
-        string Restr = "a";
+        string Restr = "";
         switch (GameManager.Instance.RestoreCheck())
         {
             case ""://魔方初始混乱状态
-                yield return mofanDRestore();
-                break;
-            case "白色小黄花"://白色小黄花已完成
-                GameManager.Instance.setMofanView("白色十字架");
-                yield return StartCoroutine(reWhite());
+                yield return StartCoroutine(mofanDRestore());
                 break;
             case "白色十字架"://白色十字架已完成
                 GameManager.Instance.setMofanView("白色底两层");
                 for (int i = 0; i < 4; i++)
                 {
                     //非标F2L转成标准F2L
-                    yield return turnF2LRange(readF2LArr()[i], i);
-                    Restr = F2LRestore(readF2LArr()[i]);
+                    yield return turnF2LRange(readF2LArr(i), i);
+                    Restr = F2LRestore(readF2LArr(i));
                     if (Restr != "不属于F2L公式范围" && Restr != "F2L未找到")
                     {
-                        Debug.Log(Restr + ":" + i % 4);
-                        //刷F2L公式
-                        yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr, true));
+                        //刷f2l公式
+                        yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr, false));
                     }
                 }
                 break;
             case "白色底两层"://白色底两层已完成
                 GameManager.Instance.setMofanView("白色底两层,黄色顶层");
-                Debug.Log(POLLRestore(true));
                 //OLL还原
-                yield return StartCoroutine(GameManager.Instance.InMStrMfan(POLLRestore(true), true));
+                yield return StartCoroutine(GameManager.Instance.InMStrMfan(POLLRestore(true), false));
                 break;
             case "白色底两层,黄色顶层"://白色底两层和黄色顶层翻色已完成
                 GameManager.Instance.setMofanView("魔方已复原");
-                Debug.Log(POLLRestore(false));
                 //PLL还原
-                yield return StartCoroutine(GameManager.Instance.InMStrMfan(POLLRestore(false),true));
+                yield return StartCoroutine(GameManager.Instance.InMStrMfan(POLLRestore(false),false));
                 break;
         }
         //最后黄色层调整
         Restr = LastUP();
         if (GameManager.Instance.RestoreCheck() == "白色底两层,黄色顶层,U未对" && Restr != "")
             yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr,true));
-
+        CheckFan();
         Debug.Log(GameManager.Instance.RestoreCheck());
         yield return null;
     }
-
-
-
-
-
-
-
-
-
 
 
     //魔方底十字复原
@@ -516,6 +515,7 @@ public class MofanMixCube : MonoBehaviour
         setClick = false;
         //按钮界面消失
         btnCanvas.SetActive(false);
+        GameManager.Instance.setMofanView("白色十字架");
         string Restr = StartUP();
         if (Restr != "")
             yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr,false));
@@ -534,6 +534,18 @@ public class MofanMixCube : MonoBehaviour
         btnCanvas.SetActive(true);
         setClick = true;
         CheckFan();
+        yield return null;
+    }
+
+    //全部非标F2L转成标准F2L
+    IEnumerator turnF2LRange(string str, int n)
+    {
+        string Restr = F2LRestore(readF2LArr(n));
+        if (Restr == "不属于F2L公式范围" && Unf2lto!="")
+        {
+            //刷转换公式，将全部非标F2L转成标准F2L
+            yield return StartCoroutine(GameManager.Instance.InMStrMfan(Unf2lto, false));
+        }
         yield return null;
     }
 
@@ -581,6 +593,8 @@ public class MofanMixCube : MonoBehaviour
                 break;
         }
     }
+
+
 
     #region Cross
     //开始让黄色中心块在U面
@@ -863,6 +877,8 @@ public class MofanMixCube : MonoBehaviour
         return str.Split(':');
     }
     #endregion
+    
+    
     #region F2L
     /// <summary>
     /// 读取的魔方F2L情况，判定魔方块的分布情况
@@ -946,29 +962,38 @@ public class MofanMixCube : MonoBehaviour
         }
         return reCode;
     }
+
     //有U判断的非标F2L转标F2L
     void unF2LStr(string[] arrs,bool isjiao)
     {
-        string s=isjiao? arrs[2].Replace("D", "") : arrs[3];
-        int k = isCenterU(s);
+        Unf2lto = "";
+        string rStr = isjiao? arrs[2].Replace("D", "") : arrs[3];
+        int k = isCenterU(rStr);
         if (k == -1)
             return;
-        if (isjiao? !arrs[3].Contains(s[1 ^ k] + "") : arrs[2].Contains(arrs[3][0] + "") && arrs[2].Contains(arrs[3][1] + ""))
+        if (isjiao? !arrs[3].Contains(rStr[1 ^ k] + "") : arrs[2].Contains(arrs[3][0] + "") && arrs[2].Contains(arrs[3][1] + ""))
         {
-            UIinit.Instance.ChangeValue(s[k] + " U' " + s[k] + "'",empty);
+            Unf2lto = " U' ";
         }
         else
         {
-            UIinit.Instance.ChangeValue(s[k] + " U " + s[k] + "'",empty);
+            Unf2lto = " U ";
         }
+        Unf2lto = rStr[k] + Unf2lto + rStr[k] + "'";
+        UIinit.Instance.ChangeValue(Unf2lto, empty);
     }
     //无U判断的非标F2L转标F2L
     void unF2LNoU(string[] arrs, bool isjiao)
     {
+        Unf2lto = "";
         string s = isjiao ? arrs[2].Replace("D", "") : arrs[3];
         int k = isCenterU(s);
         if (k != -1)
-            UIinit.Instance.ChangeValue(s[k] + " U " + s[k] + "'", empty);
+        {
+            Unf2lto = s[k] + " U " + s[k] + "'";
+            UIinit.Instance.ChangeValue(Unf2lto, empty);
+        }
+            
     }
 
     //将读取的魔方F2L情况，看是否属于F2L公式范围，若是则模拟魔方转动来返回匹配F2L的公式
@@ -977,6 +1002,7 @@ public class MofanMixCube : MonoBehaviour
         int numType = F2LRange(str);
         if (numType == -1)
         {
+            //不属于F2L公式范围
             return "不属于F2L公式范围";
         }
         int swapCount = 0;
@@ -1069,112 +1095,6 @@ public class MofanMixCube : MonoBehaviour
         str = string.Join(":", arrs);
     }
 
-
-
-    //全部非标F2L转成标准F2L
-    IEnumerator turnF2LRange(string str, int n)
-    {
-        int numType = F2LRange(str);
-        switch (numType)
-        {
-            case -1:
-                Debug.Log("F2L范围判定错误");
-                break;
-            //1/2合
-            case 4:
-                yield return StartCoroutine(UnF2L(str));
-                break;
-            //1/2分
-            case 5:
-                yield return StartCoroutine(UnF2L(str));
-                yield return StartCoroutine(UnF2L(true, str, n));
-                break;
-            case 6://角块,1/3分
-                yield return StartCoroutine(UnF2L(true, str, n));
-                break;
-            case 7://棱块，2/3分
-                yield return StartCoroutine(UnF2L(false, str, n));
-                break;
-        }
-        //Debug.Log(numType+":"+str);
-
-        yield return null;
-    }
-    //将3/3的的非标转成标准F2L，无U判断
-    IEnumerator UnF2L(string str)
-    {
-        string s = str.Substring(4, 3).Replace("D", "");
-        int k = isCenterU(s);
-        if (k != -1)
-        {
-            yield return StartCoroutine(GameManager.Instance.InMStrMfan(s[k] + " U " + s[k] + "'", true));
-        }
-        else
-        {
-            Debug.Log("不在中间层");
-        }
-        yield return null;
-    }
-    //将1/3或2/3的非标转成标准F2L，有U判断
-    IEnumerator UnF2L(bool isjiao, string str, int n)
-    {
-        string s = "";
-        if (isjiao)
-        {
-            //角块
-            s = str.Substring(8);
-        }
-        else
-        {
-            //棱块s
-            s = str.Substring(4, 3).Replace("D", "");
-        }
-
-
-        int k = isCenterU(s);
-
-        if (k != -1)
-        {
-            yield return StartCoroutine(GameManager.Instance.InMStrMfan(s[k] + "", true));
-        }
-        else
-        {
-            Debug.Log("不在中间层");
-        }
-
-        string s1 = readF2LArr()[n].Substring(4);
-        reStr(ref s1);
-
-        if (!s1.Contains(s[k] + ""))
-        {
-            s1 = "U";
-        }
-        else
-        {
-            s1 = "U'";
-        }
-        yield return StartCoroutine(GameManager.Instance.InMStrMfan(s1 + " " + s[k] + "'", true));
-
-        yield return null;
-    }
-
-
-
-    /// <summary>
-    /// 读取F2L的块
-    /// </summary>
-    /// <returns>红绿;绿橙;橙蓝;蓝红</returns>
-    string[] readF2LArr()
-    {
-        string[] F2LArr = { "M5:M11:M1:M2", "M11:M23:M19:M20", "M23:M17:M25:M26", "M17:M5:M7:M8" };
-        string[] reStr = new string[F2LArr.Length];
-
-        for (int i = 0; i < F2LArr.Length; i++)
-        {
-            reStr[i] = MofanRestore.Instance.readMofanFixed(F2LArr[i], false);
-        }
-        return reStr;
-    }
     /// <summary>
     /// 读取F2L的块
     /// </summary>
@@ -1185,6 +1105,8 @@ public class MofanMixCube : MonoBehaviour
         return MofanRestore.Instance.readMofanFixed(F2LArr[n], false);
     }
     #endregion
+    
+    
     #region PLL
     /// <summary>
     /// 读取的魔方PLL/OLL情况，模拟魔方转动来返回匹配的公式
@@ -1381,5 +1303,8 @@ public class MofanMixCube : MonoBehaviour
         //魔方的控制器类型重置
         GameManager.pre_mofantype = "";
         GameObject.Find("Main Camera").SendMessage("InFAngles");
+        //魔方提示刷新
+        UIinit.Instance.ChangeValue("", empty);
+        CheckFan();
     }
 }
