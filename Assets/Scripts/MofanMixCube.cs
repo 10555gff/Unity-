@@ -16,7 +16,7 @@ public struct CubeStruct
 public class MofanMixCube : MonoBehaviour
 {
     public static MofanMixCube Instance = null;
-    GameObject btnCanvas,miCamera;
+    GameObject btnCanvas, tipCanvas,miCamera;
     public Button[] buttons;
     public static bool setClick = true;
     //打乱魔方字符定义
@@ -358,6 +358,8 @@ public class MofanMixCube : MonoBehaviour
         miCamera = GameObject.Find("Mini Camera").gameObject;
         //找到按钮界面
         btnCanvas = GameObject.Find("BtnCanvas").gameObject;
+        //找到提示框界面
+        tipCanvas = GameObject.Find("TipsCanvas").gameObject;
         //按钮绑定
         for (int i = 0; i < buttons.Length; i++)
         {
@@ -390,7 +392,7 @@ public class MofanMixCube : MonoBehaviour
                 }
                 break;
             case "MofanRestone"://魔方一键复原
-                if (setClick && GameManager.Instance.RestoreCheck() == "")
+                if (setClick)
                     StartCoroutine(RestoreMofan());
                 break;
             case "MofanJiduan"://魔方阶段复原
@@ -398,8 +400,9 @@ public class MofanMixCube : MonoBehaviour
                     StartCoroutine(RestoreCube());
                 break;
             case "MofanRestB"://魔方底十字复原
-                if (setClick && GameManager.Instance.RestoreCheck() == "")
-                    StartCoroutine("mofanDRestore");
+                Debug.Log("kk");
+                //if (setClick && GameManager.Instance.RestoreCheck() == "")
+                //    StartCoroutine("mofanDRestore");
                 break;
 
         }
@@ -408,18 +411,16 @@ public class MofanMixCube : MonoBehaviour
     IEnumerator MixCube(int count)
     {
         setClick = false;
-        //按钮界面及小摄像机消失
-        btnCanvas.SetActive(false);
-        miCamera.SetActive(false);
+        //按钮界面、小摄像机、公式提示框消失
+        showHideCanvas(false, false,false);
         for (int i = 0; i < count; i++)
         {
             GameManager.Instance.InStrMofan(mxi_strs[Random.Range(0,14)],false);
             //等待0.23秒
             yield return new WaitForSeconds(0.23f);
         }
-        //按钮界面及小摄像机重现
-        miCamera.SetActive(true);
-        btnCanvas.SetActive(true);
+        //按钮界面、小摄像机、公式提示框重现
+        showHideCanvas();
         //协程结束
         StopCoroutine("MixCube");
         setClick = true;
@@ -472,12 +473,32 @@ public class MofanMixCube : MonoBehaviour
         switch (GameManager.Instance.RestoreCheck())
         {
             case ""://魔方初始混乱状态
-                yield return StartCoroutine(mofanDRestore());
+                GameManager.Instance.setMofanView("白色十字架");
+                //魔方底十字复原,刷之前检测一次
+                CheckFan();
+                Restr = StartUP();
+                if (Restr != "")
+                    yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr, false));
+                //Cross还原
+                while (RestoreNum() != 4)
+                {
+                    //小黄花还原
+                    yield return StartCoroutine(CrossCenter());
+                    yield return StartCoroutine(CrossDown());
+                    yield return StartCoroutine(CrossDownUP());
+                }
+                //白色翻面
+                yield return StartCoroutine(reWhite());
+                //f2l重置为未选择的样子
+                reChoose = 0;
                 break;
             case "白色十字架"://白色十字架已完成
                 GameManager.Instance.setMofanView("白色底两层");
                 for (int i = 0; i < 4; i++)
                 {
+                    //刷之前检测一次
+                    reChoose = i;
+                    CheckFan();
                     //非标F2L转成标准F2L
                     yield return turnF2LRange(readF2LArr(i), i);
                     Restr = F2LRestore(readF2LArr(i));
@@ -503,39 +524,12 @@ public class MofanMixCube : MonoBehaviour
         Restr = LastUP();
         if (GameManager.Instance.RestoreCheck() == "白色底两层,黄色顶层,U未对" && Restr != "")
             yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr,true));
+        //刷之后再检测一次,到下一阶段
         CheckFan();
         Debug.Log(GameManager.Instance.RestoreCheck());
         yield return null;
     }
 
-
-    //魔方底十字复原
-    IEnumerator mofanDRestore()
-    {
-        setClick = false;
-        //按钮界面消失
-        btnCanvas.SetActive(false);
-        GameManager.Instance.setMofanView("白色十字架");
-        string Restr = StartUP();
-        if (Restr != "")
-            yield return StartCoroutine(GameManager.Instance.InMStrMfan(Restr,false));
-        //Cross还原
-        while (RestoreNum() != 4)
-        {
-            //小黄花还原
-            yield return StartCoroutine(CrossCenter());
-            yield return StartCoroutine(CrossDown());
-            yield return StartCoroutine(CrossDownUP());
-        }
-        //白色翻面
-        yield return StartCoroutine(reWhite());
-        //协程结束
-        StopCoroutine("mofanDRestore");
-        btnCanvas.SetActive(true);
-        setClick = true;
-        CheckFan();
-        yield return null;
-    }
 
     //全部非标F2L转成标准F2L
     IEnumerator turnF2LRange(string str, int n)
@@ -1305,6 +1299,14 @@ public class MofanMixCube : MonoBehaviour
         GameObject.Find("Main Camera").SendMessage("InFAngles");
         //魔方提示刷新
         UIinit.Instance.ChangeValue("", empty);
+        reChoose = 0;
         CheckFan();
+    }
+    void showHideCanvas(bool b1=true,bool b2= true, bool b3= true)
+    {
+        //按钮界面及小摄像机消失
+        btnCanvas.SetActive(b1);
+        miCamera.SetActive(b2);
+        tipCanvas.SetActive(b3);
     }
 }

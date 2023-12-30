@@ -38,7 +38,7 @@ public class UIinit : MonoBehaviour
             btns[i].onClick.AddListener(btnOnClick);
         }
         //面板绑定
-        foreach (Transform t in Canvas_ui.transform.Find("Panel").GetComponentsInChildren<Transform>())
+        foreach (Transform t in Canvas_ui2.transform.Find("Panel").GetComponentsInChildren<Transform>())
         {
             switch (t.name)
             {
@@ -58,14 +58,16 @@ public class UIinit : MonoBehaviour
                     btnUp = t.GetComponent<Button>();
                     btnUp.onClick.AddListener(delegate ()
                     {
-                        MofanMixCube.Instance.switchFormula(1);
+                        if(MofanMixCube.setClick)
+                            MofanMixCube.Instance.switchFormula(1);
                     });
                     break;
                 case "btnDown":
                     btnDown = t.GetComponent<Button>();
                     btnDown.onClick.AddListener(delegate ()
                     {
-                        MofanMixCube.Instance.switchFormula(-1);
+                        if (MofanMixCube.setClick)
+                            MofanMixCube.Instance.switchFormula(-1);
                     });
                     break;
             }

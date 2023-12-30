@@ -8,8 +8,8 @@ public class CameraPreview : MonoBehaviour
     //观看魔方的距离，有缩放效果
     public float distance = 8.0f;
     //物体观看速度
-    public float xSpeed = 300f;
-    public float ySpeed = 280f;
+    public float xSpeed = 280f;
+    public float ySpeed = 255f;
     //物体上下旋转角度的限制
     public float yMinLimit = -90.0f;
     public float yMaxLimit = 90.0f;
